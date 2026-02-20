@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Decision Quiz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  #next-btn {
+    background-color: purple;
+    color: black;
+    padding: 10px;
+    border-radius: 6px;
+  }
+  .btn-selected {
+    background-color: pink;
+  }
+</style>
+</head>
+
+<body class="bg-light d-flex align-items-center" style="min-height:100vh;">
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-6 col-lg-4">
+      <h3 style="color: darkorchid;">NNZကEllsaအကြောင်းဘယ်လောက်သိလဲစစ်ဆေးခြင်း</h3>
+      <h6 style="color:brown">အဖြေကတစ်ခါပဲနှိပ်လို့ရလို့ သေချာစဉ်းစားပြီးမှရွေးနော်</h6>
+
+      <!-- Quiz Card -->
+      <div id="quiz-card" class="card shadow p-4">
+        <h6 id="progress" class="text-muted"></h6>
+        <h4 id="question" class="mb-3"></h4>
+        <div id="choices" class="d-grid gap-2"></div>
+        <button id="next-btn" class="btn btn-primary mt-3" disabled>
+          Next
+        </button>
+      </div>
+
+      <!-- Result Card -->
+      <div id="result-card" class="card shadow p-4 mt-3 d-none text-center">
+        <h3>အဖြေ:</h3>
+        <p id="result-text" class="fs-5"></p>
+        <button id="restart-btn" class="btn btn-success">
+          Restart
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   QUESTIONS
+========================= */
+const questions = [
+  {
+    question: "Ellsaနဲ့ ညီညီဇော်ပထမဆုံးသိတဲ့ရက်?",
+    choices: [
+      { text: "၂၀၂၅/၁၂/၁၀", value: "D" },
+      { text: "၂၀၂၅/၁၁/၀၁", value: "D" },
+      { text: "၂၀၂၅/၁၂/၀၁", value: "A" },
+      { text: "၂၀၂၆/၀၁/၀၁", value: "C" },
+    ]
+  },
+  {
+    question: "Ellsaရဲ့မွေးနေ့?",
+    choices: [
+      { text: "1996/07/10", value: "D" },
+      { text: "1996/07/11", value: "A" },
+      { text: "1995/07/01", value: "D" },
+      { text: "1995/07/10", value: "D" }
+    ]
+  }
+  ,
+  {
+    question: "Ellsaက မောင်နှမဘယ်နယောက်ရှိတာလဲ?",
+    choices: [
+      { text: "5", value: "A" },
+      { text: "4", value: "D" },
+      { text: "6", value: "D" }
+    ]
+  }
+    ,
+  {
+    question: "Ellsaကဘာသွေးအမျိုးအစားလဲ",
+    choices: [
+      { text: "A", value: "D" },
+      { text: "AB", value: "A" },
+      { text: "B", value: "D" },
+      { text: "O", value: "D" }
+    ]
+  }
+      ,
+  {
+    question: "Ellsaကညီညီဇော်နဲ့စတွေ့တဲ့နေ့ကဘာအရောင်ဝတ်လာတာလဲ",
+    choices: [
+      { text: "ပန်းဆီ", value: "D" },
+      { text: "အပြာ", value: "A" },
+      { text: "ဒေါနစိမ်း", value: "D" }
+    ]
+  }
+    ,
+  {
+    question: "Ellsaအစားများဆုံးအသီးအနှံ",
+    choices: [
+      { text: "မုန်လာဉ", value: "D" },
+      { text: "အာလူးသီး", value: "A" },
+      { text: "ကန်စွန်းရွက်", value: "A" },
+      { text: "ရုံးပတီသီး", value: "D" },
+    ]
+  }
+      ,
+  {
+    question: "Ellsaရဲ့ဖုန်းနံပါတ်ကဘာနဲ့ဆုံးတာလဲ",
+    choices: [
+      { text: "..193", value: "B" },
+      { text: "..139", value: "A" },
+      { text: "..146", value: "B" },
+      { text: "..164", value: "B" }
+    ]
+  }
+  ,
+  {
+    question: "Ellsaက ရုံးဖွင့်ရက်ဆို alarm ဘယ်အချိန်ပေးပြီးထတာလဲ",
+    choices: [
+      { text: "6နာရီ25မိနစ်", value: "A" },
+      { text: "6နာရီ30မိနစ်", value: "A" },
+      { text: "6နာရီ45မိနစ်", value: "D" },
+    ]
+  }
+];
+
+/* =========================
+   STATE
+========================= */
+let currentIndex = 0;
+let answers = [];
+
+/* =========================
+   DOM ELEMENTS
+========================= */
+const questionEl = document.getElementById("question");
+const choicesEl = document.getElementById("choices");
+const nextBtn = document.getElementById("next-btn");
+const resultCard = document.getElementById("result-card");
+const quizCard = document.getElementById("quiz-card");
+const resultText = document.getElementById("result-text");
+const restartBtn = document.getElementById("restart-btn");
+const progressEl = document.getElementById("progress");
+
+/* =========================
+   LOAD QUESTION
+========================= */
+function loadQuestion() {
+  const current = questions[currentIndex];
+
+  questionEl.textContent = current.question;
+  progressEl.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+  choicesEl.innerHTML = "";
+  nextBtn.disabled = true;
+
+  current.choices.forEach(choice => {
+    const button = document.createElement("button");
+    button.textContent = choice.text;
+    button.className = "btn btn-outline-secondary";
+
+    button.onclick = () => selectAnswer(choice.value, button);
+
+    choicesEl.appendChild(button);
+  });
+}
+
+/* =========================
+   SELECT ANSWER
+========================= */
+function selectAnswer(value, button) {
+
+  // prevent reselect
+  if (answers[currentIndex] !== undefined) return;
+
+  answers[currentIndex] = value;
+  nextBtn.disabled = false;
+
+  const buttons = choicesEl.querySelectorAll("button");
+
+  buttons.forEach(btn => {
+    btn.classList.remove("btn-outline-secondary");
+    btn.classList.remove("btn-primary");
+    btn.classList.add("btn-outline-secondary");
+    btn.disabled = true;
+  });
+
+  button.classList.remove("btn-outline-secondary");
+  button.classList.add("btn-primary");
+}
+
+/* =========================
+   NEXT BUTTON
+========================= */
+nextBtn.addEventListener("click", () => {
+  currentIndex++;
+
+  if (currentIndex < questions.length) {
+    loadQuestion();
+  } else {
+    showResult();
+  }
+});
+
+/* =========================
+   BUSINESS LOGIC
+========================= */
+function calculateResult() {
+  result = "success";
+
+  // Example Business Rules
+  answers.forEach(element => {
+      // If any answer is not A or B
+    if (element !== "A" && element !== "B") {
+      result = "fail";
+    }
+  });
+
+
+  return result === "success" ? "ကံကောင်းပြီးအောင်မြင်သွားပါတယ်" : "ဝမ်းနည်းပါတယ် မအောင်မြင်ပါဘူးညီညီဇော်";
+}
+
+/* =========================
+   SHOW RESULT
+========================= */
+function showResult() {
+  quizCard.classList.add("d-none");
+  resultCard.classList.remove("d-none");
+
+  const finalResult = calculateResult();
+  resultText.textContent = finalResult;
+}
+
+/* =========================
+   RESTART
+========================= */
+restartBtn.addEventListener("click", () => {
+  currentIndex = 0;
+  answers = [];
+  resultCard.classList.add("d-none");
+  quizCard.classList.remove("d-none");
+  loadQuestion();
+});
+
+/* =========================
+   INIT
+========================= */
+loadQuestion();
+
+</script>
+
+</body>
+</html>
